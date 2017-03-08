@@ -15,9 +15,18 @@ import java.util.List;
 public class Vaccination extends AbstractItem<Vaccination, Vaccination.ViewHolder> {
 
     String title, date, info, header;
+    long headerId;
 
     public Vaccination(){
 
+    }
+
+    public long getHeaderId() {
+        return headerId;
+    }
+
+    public void setHeaderId(long headerId) {
+        this.headerId = headerId;
     }
 
     public String getDate() {

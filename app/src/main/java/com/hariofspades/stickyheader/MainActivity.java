@@ -10,11 +10,20 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.IAdapter;
 import com.mikepenz.fastadapter.IItem;
@@ -25,12 +34,20 @@ import com.mikepenz.fastadapter.helpers.ClickListenerHelper;
 import com.mikepenz.fastadapter.listeners.ClickEventHook;
 import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String[] headers = new String[]{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+    private static final String TAG = "MainActivity";
     RecyclerView recyclerView;
     FastItemAdapter fastAdapter;
     List<Vaccination> vaccinations;
@@ -68,8 +85,30 @@ public class MainActivity extends AppCompatActivity {
         decoration = new StickyRecyclerHeadersDecoration(stickyHeaderAdapter);
         recyclerView.addItemDecoration(decoration);
         //recyclerView.setAdapter(fastAdapter);
-        fastAdapter.add(getItems());
+        callAPI();
+        //fastAdapter.add(getItems());
         setupListeners();
+    }
+
+    private void callAPI() {
+        String url="http://54.169.72.195/WebAppAPI/testing.php/api/v1/vaccination/getNewVaccinationList";
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("family_member_id", "152239");
+        RequestQueue requestq = Volley.newRequestQueue(this);
+        CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST,
+                url,params,
+                this.createDashboardSuccessListener(), this.createDashboardErrorListener());
+        jsObjRequest.setRetryPolicy(new DefaultRetryPolicy(5000, 2,1));
+        requestq.add(jsObjRequest);
+    }
+
+    private Response.ErrorListener createDashboardErrorListener() {
+        return new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                    error.printStackTrace();
+            }
+        };
     }
 
     private void setupListeners() {
@@ -133,6 +172,43 @@ public class MainActivity extends AppCompatActivity {
         }
         return vaccinations;
     }
+
+    private Response.Listener<JSONObject> createDashboardSuccessListener() {
+        return new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    String header=""; int iter=0;
+                    vaccinations=new ArrayList<>();
+                    JSONObject data=response.getJSONObject("data");
+                    JSONArray vaccineArray=data.getJSONArray("vaccination_details");
+                    for(int count=0;count<vaccineArray.length();count++){
+                        JSONObject vaccineItem=vaccineArray.getJSONObject(count);
+                        Vaccination vaccine=new Vaccination();
+                        if(header.equals(vaccineItem.getString("age")))
+                        {
+                            vaccine.setHeaderId(iter);
+                        }
+                        else{
+                            iter++;
+                            vaccine.setHeaderId(iter);
+                        }
+                        vaccine.setHeader(vaccineItem.getString("age"));
+                        vaccine.setTitle(vaccineItem.getString("vaccine_name"));
+                        vaccine.setDate(vaccineItem.getString("given_date"));
+                        vaccine.setInfo("info");
+                        header=vaccineItem.getString("age");
+                        vaccinations.add(vaccine);
+                    }
+                    fastAdapter.add(vaccinations);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

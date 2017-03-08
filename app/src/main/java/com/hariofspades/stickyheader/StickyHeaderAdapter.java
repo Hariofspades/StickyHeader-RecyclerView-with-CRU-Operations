@@ -26,9 +26,11 @@ public class StickyHeaderAdapter extends AbstractAdapter implements StickyRecycl
         IItem item = getItem(position);
 
         //in our sample we want a separate header per first letter of our items
-        //this if is not necessary for your code, we only use it as this sticky header is reused for different item implementations
+        //this if is not necessary for your code, we only use it as this sticky header is reused for
+        //different item implementations
         if (item instanceof Vaccination && ((Vaccination) item).header != null) {
-            return ((Vaccination) item).header.charAt(0);
+            return ((Vaccination) item).headerId;
+            //return ((Vaccination) item).header.charAt(0);
         }
         return -1;
     }
@@ -48,7 +50,7 @@ public class StickyHeaderAdapter extends AbstractAdapter implements StickyRecycl
         IItem item = getItem(position);
         if (item instanceof Vaccination && ((Vaccination) item).header != null) {
             //based on the position we set the headers text
-            textView.setText(String.valueOf(((Vaccination) item).header.charAt(0)));
+            textView.setText(String.valueOf(((Vaccination) item).header));
         }
         holder.itemView.setBackgroundColor(getRandomColor());
     }

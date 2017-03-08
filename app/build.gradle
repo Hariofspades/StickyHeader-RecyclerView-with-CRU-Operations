@@ -33,4 +33,5 @@ dependencies {
     compile 'com.mikepenz:materialize:1.0.0@aar'
     compile project(':library-core')
     compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
+    compile 'com.android.volley:volley:1.0.0'
 }
